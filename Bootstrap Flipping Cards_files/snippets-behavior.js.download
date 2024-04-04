@@ -1,0 +1,68 @@
+(function ( $ ) {
+
+  var packages = [];
+
+  if ( typeof $.fn.materialChip === 'function' ) {
+
+    $('.chips-initial').materialChip({
+      placeholder: 'At least one tag such as (button, SideNav, JS), max 5 tags',
+      secondaryPlaceholder: '+Tag'
+    });
+  }
+
+  $('#save-snippet-settings').on('click', function (e) {
+
+    var queryString = buildQueryString();
+
+    window.location.assign('/snippets/' + encodeURIComponent( $('#snippet-package-technology').val() ).toLowerCase() + '/' + $(this).attr('data-user-nicename') + queryString);
+  });
+
+  function buildQueryString() {
+
+    return '?action=save_settings' +
+      '&tech=' + encodeURIComponent($('#snippet-package-technology').val()) +
+      '&ver=' + encodeURIComponent($('#snippet-package-version').val()) +
+      '&type=' + encodeURIComponent($('#snippet-package-type').val()) +
+      '&title=' + encodeURIComponent($('#snippet-title').val()) +
+      '&desc=' + encodeURIComponent($('#snippet-description').val()) +
+      '&package=' + packages.filter(function (pack) {
+
+        return pack.technology === $('#snippet-package-technology').val() &&
+          pack.version === $('#snippet-package-version').val() &&
+          pack.type === $('#snippet-package-type').val()
+      })[0].package_id;
+  }
+
+  $.ajax({
+    url: '/api/snippets/snippets/packages/read',
+    method: 'GET'
+  }).done(function (response) {
+
+    packages = response;
+
+    var technologies = [],
+      versions = [],
+      types = [];
+
+    packages.forEach(function (pack) {
+
+      if (technologies.indexOf(pack.technology) === -1) {
+
+        technologies.push(pack.technology);
+        $('#snippet-package-technology').append('<option>'+ pack.technology +'</option>', { value: pack.technology });
+      }
+
+      if (versions.indexOf(pack.version) === -1) {
+
+        versions.push(pack.version);
+        $('#snippet-package-version').append('<option>'+ pack.version +'</option>', { value: pack.version });
+      }
+
+      if (types.indexOf(pack.type) === -1) {
+
+        types.push(pack.type);
+        $('#snippet-package-type').append('<option>'+ pack.type +'</option>', { value: pack.type });
+      }
+    });
+  }).fail(console.error);
+})( jQuery );
